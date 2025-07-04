@@ -1,7 +1,7 @@
-from httpclient.client import HttpClient  # Adjusted import to your project structure
+from httpprotocol.client import HttpClient
 import os
 
-client = HttpClient(debug=True)
+client = HttpClient(debug=False)
 
 # --- GET Test
 print("\n--- [GET] JSONPlaceholder Post ---")
@@ -10,7 +10,7 @@ print(res.status_code)
 print(res.json())
 res.raise_for_status()
 
-# --- POST Test (Form Data)
+# --- POST Test (form data)
 print("\n--- [POST] Postman Echo Form ---")
 res = client.post(
     "https://postman-echo.com/post",
@@ -50,16 +50,15 @@ print("Deleted? =>", res.ok)
 # --- RAW TEXT & HEADERS Example
 print("\n--- [GET] Raw Text & Headers ---")
 res = client.get("https://postman-echo.com/headers")
-print("Text Content (first 100 chars):", res.text[:100])
-print("Headers:", dict(res.headers))
+print("Text Content:", res.text[:100])
+print("Headers:", res.headers)
 
 # --- TIMEOUT & RETRY Test
 print("\n--- [GET] Timeout Example ---")
 try:
     res = client.get("https://postman-echo.com/delay/5", timeout=2)
-    print(res.status_code)
 except Exception as e:
-    print("Timeout triggered or retried out:", e)
+    print("Timeout triggered:", e)
 
 # --- BASIC AUTH Test
 print("\n--- [GET] Basic Auth Example ---")
@@ -71,8 +70,7 @@ print(res.json())
 # --- JSON SAFE Test
 print("\n--- [GET] JSON Safe Example ---")
 res = client.get("https://postman-echo.com/get")
-safe_json = res.get_json_safe(default={"error": "Invalid JSON"})
-print("Safe JSON Fallback Example:", safe_json)
+print("Safe JSON (should fallback to dict):", res.get_json_safe(default={"error": "Invalid JSON"}))
 
 # --- STREAM RESPONSE Raw Example (Simulated with large response) ---
 print("\n--- [STREAM RESPONSE] Bytes ---")
@@ -84,9 +82,23 @@ for chunk in client.stream_response(test_url, chunk_size=128):
 
 print(f"Total Bytes Streamed: {byte_count}")
 
-# --- DOWNLOAD FILE Example ---
-print("\n--- [DOWNLOAD FILE] Example ---")
-dest_file = "test_download.bin"
-client.download("https://postman-echo.com/bytes/512", dest_file)
-print(f"File downloaded: {dest_file} (size: {os.path.getsize(dest_file)} bytes)")
-os.remove(dest_file)
+# --- CUSTOM HEADERS & USER-AGENT Example
+print("\n--- [GET] Custom Headers & User-Agent ---")
+
+custom_client = HttpClient(
+    default_headers={
+        "User-Agent": "MyCustomClient/1.0 (+https://example.com)",
+        "X-Project-Name": "httpprotocol-lib",
+        "X-Powered-By": "Python"
+    },
+    debug=True
+)
+
+res = custom_client.get("https://postman-echo.com/headers")
+
+print("Status Code:", res.status_code)
+
+headers_received = res.json().get("headers", {})
+print("Returned User-Agent:", headers_received.get("user-agent"))
+print("Returned X-Project-Name:", headers_received.get("x-project-name"))
+print("Returned X-Powered-By:", headers_received.get("x-powered-by"))
