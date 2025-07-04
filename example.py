@@ -1,7 +1,7 @@
-from httpprotocol.client import HttpClient
+from httpclient.client import HttpClient  # Adjusted import to your project structure
 import os
 
-client = HttpClient(debug=False)
+client = HttpClient(debug=True)
 
 # --- GET Test
 print("\n--- [GET] JSONPlaceholder Post ---")
@@ -10,7 +10,7 @@ print(res.status_code)
 print(res.json())
 res.raise_for_status()
 
-# --- POST Test (form data)
+# --- POST Test (Form Data)
 print("\n--- [POST] Postman Echo Form ---")
 res = client.post(
     "https://postman-echo.com/post",
@@ -50,15 +50,16 @@ print("Deleted? =>", res.ok)
 # --- RAW TEXT & HEADERS Example
 print("\n--- [GET] Raw Text & Headers ---")
 res = client.get("https://postman-echo.com/headers")
-print("Text Content:", res.text[:100])
-print("Headers:", res.headers)
+print("Text Content (first 100 chars):", res.text[:100])
+print("Headers:", dict(res.headers))
 
 # --- TIMEOUT & RETRY Test
 print("\n--- [GET] Timeout Example ---")
 try:
     res = client.get("https://postman-echo.com/delay/5", timeout=2)
+    print(res.status_code)
 except Exception as e:
-    print("Timeout triggered:", e)
+    print("Timeout triggered or retried out:", e)
 
 # --- BASIC AUTH Test
 print("\n--- [GET] Basic Auth Example ---")
@@ -70,14 +71,22 @@ print(res.json())
 # --- JSON SAFE Test
 print("\n--- [GET] JSON Safe Example ---")
 res = client.get("https://postman-echo.com/get")
-print("Safe JSON (should fallback to dict):", res.get_json_safe(default={"error": "Invalid JSON"}))
+safe_json = res.get_json_safe(default={"error": "Invalid JSON"})
+print("Safe JSON Fallback Example:", safe_json)
 
 # --- STREAM RESPONSE Raw Example (Simulated with large response) ---
 print("\n--- [STREAM RESPONSE] Bytes ---")
 byte_count = 0
-test_url = "https://postman-echo.com/bytes/1024"  # 1KB of random bytes
+test_url = "https://postman-echo.com/bytes/1024"
 
 for chunk in client.stream_response(test_url, chunk_size=128):
     byte_count += len(chunk)
 
 print(f"Total Bytes Streamed: {byte_count}")
+
+# --- DOWNLOAD FILE Example ---
+print("\n--- [DOWNLOAD FILE] Example ---")
+dest_file = "test_download.bin"
+client.download("https://postman-echo.com/bytes/512", dest_file)
+print(f"File downloaded: {dest_file} (size: {os.path.getsize(dest_file)} bytes)")
+os.remove(dest_file)
