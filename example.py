@@ -102,3 +102,20 @@ headers_received = res.json().get("headers", {})
 print("Returned User-Agent:", headers_received.get("user-agent"))
 print("Returned X-Project-Name:", headers_received.get("x-project-name"))
 print("Returned X-Powered-By:", headers_received.get("x-powered-by"))
+
+# --- PROXY SUPPORT Example
+print("\n--- [GET] Via HTTP Proxy ---")
+
+proxy_client = HttpClient(
+    proxies={
+        "http": "http://127.0.0.1:8080"
+    },
+    debug=True
+)
+
+try:
+    res = proxy_client.get("https://postman-echo.com/ip")
+    print("Status Code:", res.status_code)
+    print("Response JSON:", res.json())
+except Exception as e:
+    print("Proxy request failed:", e)
