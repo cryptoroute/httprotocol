@@ -1,4 +1,4 @@
-# httpprotocol
+# httprotocol
 
 A lightweight but powerful Python HTTP client library with CLI support.
 
